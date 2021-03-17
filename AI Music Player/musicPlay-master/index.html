@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="p5.js"></script>
+  	<script src="p5.dom.min.js"></script>
+  	<script src="p5.sound.min.js"></script>
+	<script src="ml5.min.js"></script>
+  	<link rel="stylesheet" type="text/css" href="style.css">
+	<meta charset="UTF-8">
+	<title>AI Music Player - NewCity</title>
+	<style type="text/css">
+		/*实现背景图片透明，内容不透明*/
+		#music {
+			width: 700px;
+			height: 500px;
+			border-radius: 10px;
+			margin: 20px auto;
+			position: relative;
+			background: url("./image/City_of_Stars.jpg") no-repeat;
+			background-size: cover;
+			text-align: center;
+		}
+		#container {
+			position: absolute;
+			left: 0;
+		    right: 0;
+		    top: 0;
+		    bottom: 0;
+		    width: 700px;
+		    height: 500px;
+		    text-align: center;
+		    background:rgba(255,255,255,0.6);
+		}
+		/*实现背景图片透明，内容不透明*/
+
+		#musicImg {
+			width: 340px;
+			height: 340px;
+			border-radius: 50%;
+		}
+		audio {
+			display: block;
+			margin: 20px auto;
+		}
+		#musicName {
+			padding-top: 10px;
+			line-height: 30px;
+			color: #6e6e6e;
+		}
+		.btn>button {
+			width: 60px;
+			height: 30px;
+			border-radius: 10px;
+			background: rgb(181, 219, 235);
+		}
+	</style>
+</head>
+<body>
+	
+	<div id="music">
+		<div id="container">
+			<h3 id="musicName">City of Stars</h3>
+			<img src="image/City_of_Stars.jpg" id="musicImg">
+			<audio src="./music/City_of_Stars.mp3" controls id="audio"></audio>
+			<!--<div class="btn">
+				<button id="play">play</button>
+				<button id="pause">pause</button>
+				<button id="prev">prev</button>
+				<button id="next">next</button>
+			</div>-->
+		</div>
+	</div>
+	<script type="text/javascript">
+		var //play = document.getElementById('play'),
+			//pause = document.getElementById('pause'),
+			//prev = document.getElementById('prev'),
+			//next = document.getElementById('next'),
+			musicName = document.getElementById('musicName'),
+			musicImg = document.getElementById('musicImg'),
+			bgImage = document.getElementById('music');
+
+		var music = new Array();
+		music = ['City_of_Stars','1965','Kaleidoscope','Dream_It_Possible','Locked_Away','东风志'];
+		var len = music.length;
+		var num = 0;
+
+
+		// 播放
+		/*play.onclick = function(){
+			if(audio.paused){
+				audio.play();
+			}
+		}
+
+		// 暂停
+		pause.onclick = function(){
+			if(audio.played){
+				audio.pause();
+			}
+		}
+
+		// 上一首
+		prev.onclick = function(){
+			num = (num + len - 1) % len;
+			audio.src = './music/' + music[num] + '.mp3';
+			musicName.innerHTML = music[num];
+			bgImage.style.backgroundImage = 'url(./image/' + music[num] + '.jpg)';
+			musicImg.src = './image/' + music[num] + '.jpg';
+			audio.play();
+		}
+
+		// 下一首
+		next.onclick = function(){
+			num = (num + 1) % len;
+			audio.src = './music/' + music[num] + '.mp3';
+			musicName.innerHTML = music[num];
+			bgImage.style.backgroundImage = 'url(./image/' + music[num] + '.jpg)';
+			musicImg.src = './image/' + music[num] + '.jpg';
+			audio.play();
+		}*/
+
+		// 自动切换下一首
+		audio.addEventListener('ended',function(){
+			next.onclick();
+		},false);
+
+		let video;
+		let emoji = "🤺";
+		// For displaying the label
+		let label = "waiting...";
+		let labelout="waiting...";
+		// The classifier
+		let classifier;//https://teachablemachine.withgoogle.com/models/SwxPB8-SR/ https://teachablemachine.withgoogle.com/models/Teosh0xiH/ https://teachablemachine.withgoogle.com/models/9MOmFCWTb/
+		let modelURL = 'https://teachablemachine.withgoogle.com/models/9MOmFCWTb/';//https://teachablemachine.withgoogle.com/models/e39lQRHK8/  https://teachablemachine.withgoogle.com/models/eWaPLy8uV/
+
+		// STEP 1: Load the model!
+		function preload() {
+		classifier = ml5.imageClassifier(modelURL + 'model.json');
+		}
+
+
+		function setup() {
+		createCanvas(225,185);
+		colorMode(HSB);
+		gravity = createVector(0, 0.2);
+		video = createCapture(VIDEO);
+		video.hide();
+		classifyVideo();
+		}
+
+		// STEP 2 classify the video
+		function classifyVideo() {
+		classifier.classify(video, gotResults);
+		}
+
+		function draw() {
+		background(0);
+		image(video, 0, 0,225,185);
+		drawtxt();
+		}
+
+		setInterval(function drawwait(){
+		
+
+		//let emoji = "🤺";
+		//addFireworks();
+		labelout=label;
+		if (label == "left") {
+			emoji = "👈";
+		}
+		else if (label == "right") {
+			emoji = "👉";
+		} 
+		else if (label == "release") {
+			emoji = "🖐️";
+		}
+		else if (label == "hold") {
+			emoji = "✊";
+		}
+		else if (label == "face") {
+			emoji = "👴";
+		}
+
+		if(audio.paused&&label=="release"){
+			audio.play();
+		}
+		if(audio.played&&label=="hold"){
+			audio.pause();
+		}
+		if(label=="right")
+		{
+			num = (num + 1) % len;
+			audio.src = './music/' + music[num] + '.mp3';
+			musicName.innerHTML = music[num];
+			bgImage.style.backgroundImage = 'url(./image/' + music[num] + '.jpg)';
+			musicImg.src = './image/' + music[num] + '.jpg';
+			audio.play();
+		}
+		if(label=="left")
+		{
+			num = (num + len - 1) % len;
+			audio.src = './music/' + music[num] + '.mp3';
+			musicName.innerHTML = music[num];
+			bgImage.style.backgroundImage = 'url(./image/' + music[num] + '.jpg)';
+			musicImg.src = './image/' + music[num] + '.jpg';
+			audio.play();
+		}
+
+		// Draw the emoji
+		
+		},1000);
+
+		function drawtxt(){
+			textSize(32);
+			textAlign(CENTER, CENTER);
+			fill(255);
+			text(labelout, width / 2, height - 16);
+
+			textSize(64);
+			text(emoji, width / 2, height / 2);
+		}/**/
+
+		// STEP 3: Get the classification!
+		function gotResults(error, results) {
+		// Something went wrong!
+		if (error) {
+			console.error(error);
+			return;
+		} else {
+			console.log(results);
+		}
+		// Store the label and classify again!
+		label = results[0].label;
+		classifyVideo();
+		}
+	</script>
+	<!--<script src="sketch.js"></script>-->
+</body>
+</html>
